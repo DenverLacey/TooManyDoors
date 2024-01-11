@@ -1,0 +1,10 @@
+.DS_Store
+.vscode
+
+# Build Artifacts
+bin
+obj
+
+# Make files
+*.make
+Makefile
