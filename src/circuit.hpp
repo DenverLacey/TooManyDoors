@@ -45,6 +45,9 @@ struct Cell {
 
 struct Robot {
     Vector2i position, direction;
+
+    void rotate_clockwise();
+    void rotate_counter_clockwise();
 };
 
 struct Power_Emitter {
@@ -86,7 +89,7 @@ struct Circuit_State {
     std::array<Cell, MAX_CIRCUIT_SIZE> cells;
     Circuit_Info original;
 
-    void set(Circuit_Info circuit);
-    void reset();
+    void load(Circuit_Info circuit);
+    void reload();
     Tick_Result tick();
 };

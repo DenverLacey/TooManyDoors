@@ -2,15 +2,29 @@
 
 #include "raymath.h"
 
-void Circuit_State::set(Circuit_Info circuit) {
-    original = circuit;
-    cells = original.cells;
-    reset();
+void Robot::rotate_clockwise() {
+    float x = direction.x;
+    direction.x = -direction.y;
+    direction.y = x;
 }
 
-void Circuit_State::reset() {
+void Robot::rotate_counter_clockwise() {
+    float x = direction.x;
+    direction.x = direction.y;
+    direction.y = -x;
+}
+
+void Circuit_State::load(Circuit_Info circuit) {
+    original = circuit;
+    cells = original.cells;
+    reload();
+}
+
+void Circuit_State::reload() {
     robot = original.robot;
     sentence = {};
+    assert(cells.size() == original.cells.size());
+    memcpy(cells.data(), original.cells.data(), (original.width * original.height) * sizeof(Cell));
 }
 
 Tick_Result Circuit_State::tick() {
@@ -41,6 +55,30 @@ Tick_Result Circuit_State::tick() {
                         break;
                     }
                 }
+
+                switch (ncell.kind) {
+                    case Cell::REFLECTOR: {
+                        if (ncell.reflector.flipped) {
+                            if (robot.direction.x != 0) {
+                                robot.rotate_counter_clockwise();
+                            } else {
+                                robot.rotate_clockwise();
+                            }
+                        } else {
+                            if (robot.direction.x != 0) {
+                                robot.rotate_clockwise();
+                            } else {
+                                robot.rotate_counter_clockwise();
+                            }
+                        }
+                        break;
+                    }
+                    case Cell::PLATE: {
+                        return TICK_COMPLETE_PLATE_ACTIVATED;
+                    }
+                    default:
+                        break;
+                }
                 break;
             }
             case RUNE_CHANGE_DIRECTION: {
@@ -50,9 +88,7 @@ Tick_Result Circuit_State::tick() {
                 break;
             }
             case RUNE_ROTATE: {
-                float x = robot.direction.x;
-                robot.direction.x = -robot.direction.y;
-                robot.direction.y = x;
+                robot.rotate_clockwise();
                 break;
             }
             case RUNE_INTERACT: {
