@@ -12,9 +12,9 @@ inline const Color render_highlight_color = WHITE;
 inline const Color render_fg_color = GRAY;
 inline const Color render_bg_color = ColorAlphaBlend(BLACK, GRAY, LIGHTGRAY);
 
-struct Circuit_State;
+struct Motherboard;
 
-void render_circuit(const Circuit_State& circuit, Rectangle area);
+void render_circuit(const Motherboard& mb, Rectangle area);
 
 void render_bordered_pane(Rectangle area);
 

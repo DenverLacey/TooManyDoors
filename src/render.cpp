@@ -3,15 +3,15 @@
 #include "circuit.hpp"
 #include "raymath.h"
 
-void render_circuit(const Circuit_State& circuit, Rectangle area) {
+void render_circuit(const Motherboard& mb, Rectangle area) {
     render_bordered_pane(area);
     
-    float cell_width = area.width / ((float)circuit.original.width + 2.f);
-    float cell_height = area.height / ((float)circuit.original.height + 2.f);
+    float cell_width = area.width / ((float)mb.circuit.width + 2.f);
+    float cell_height = area.height / ((float)mb.circuit.height + 2.f);
 
-    for (int y = 0; y < circuit.original.height; y++) {
-        for (int x = 0; x < circuit.original.width; x++) {
-            Cell cell = circuit.cells[x + y * circuit.original.width];
+    for (int y = 0; y < mb.circuit.height; y++) {
+        for (int x = 0; x < mb.circuit.width; x++) {
+            Cell cell = mb.cells[x + y * mb.circuit.width];
 
             Rectangle cell_rec = {
                 .x = area.x + cell_width * (x + 1),
@@ -110,17 +110,34 @@ void render_circuit(const Circuit_State& circuit, Rectangle area) {
         }
     }
 
-    float robot_x = area.x + cell_width * (circuit.robot.position.x + 1) + cell_width / 2.f;
-    float robot_y = area.y + cell_height * (circuit.robot.position.y + 1) + cell_height / 2.f;
-    float power_x = area.x + cell_width * (circuit.original.power_emitter.position.x + 1) + cell_width / 2.f;
-    float power_y = area.y + cell_height * (circuit.original.power_emitter.position.y + 1) + cell_height / 2.f;
+    for (int i = 1; i < (int)mb.powered_cells.size(); i++) {
+        Vector2i p1 = mb.powered_cells[i-1];
+        Vector2i p2 = mb.powered_cells[i];
+
+        Vector2 v1 = {
+            .x = area.x + cell_width * (p1.x + 1) + cell_width / 2.f,
+            .y = area.y + cell_height * (p1.y + 1) + cell_height / 2.f,
+        };
+
+        Vector2 v2 = {
+            .x = area.x + cell_width * (p2.x + 1) + cell_width / 2.f,
+            .y = area.y + cell_height * (p2.y + 1) + cell_height / 2.f,
+        };
+
+        DrawLineEx(v1, v2, render_thickness, BLUE);
+    }
+
+    float robot_x = area.x + cell_width * (mb.robot.position.x + 1) + cell_width / 2.f;
+    float robot_y = area.y + cell_height * (mb.robot.position.y + 1) + cell_height / 2.f;
+    float power_x = area.x + cell_width * (mb.circuit.power_emitter.position.x + 1) + cell_width / 2.f;
+    float power_y = area.y + cell_height * (mb.circuit.power_emitter.position.y + 1) + cell_height / 2.f;
 
     DrawCircle(robot_x, robot_y, cell_height / 2.f - 10.f, YELLOW);
     DrawCircle(power_x, power_y, cell_height / 2.f - 10.f, BLUE);
 
 #ifdef DEBUG
     Vector2 arrow_start = { robot_x, robot_y };
-    Vector2 arrow_end = Vector2Add(arrow_start, Vector2Scale(circuit.robot.direction, cell_height / 2.f - 10.f));
+    Vector2 arrow_end = Vector2Add(arrow_start, Vector2Scale(mb.robot.direction, cell_height / 2.f - 10.f));
     DrawLineEx(arrow_start, arrow_end, 1.f, MAGENTA);
 #endif
 }

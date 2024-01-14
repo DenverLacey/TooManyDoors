@@ -61,7 +61,7 @@ struct Power_Emitter {
 #define MAX_CIRCUIT_SIZE (MAX_CIRCUIT_WIDTH * MAX_CIRCUIT_HEIGHT)
 
 // Defintion of a circuit puzzle.
-struct Circuit_Info {
+struct Circuit {
     Rune_Set available_runes;
     int max_runes_allowed;
     int width, height;
@@ -83,18 +83,31 @@ enum Step_Result {
     STEP_COMPLETE_PLATE_ACTIVATED,
 };
 
-struct Circuit_State {
+enum Step_Power_Result {
+    STEP_POWER_ERROR,
+    STEP_POWER_PENDING,
+    STEP_POWER_COMPLETE,
+    STEP_POWER_COMPLETE_SOCKET_ACTIVATED,
+};
+
+struct Motherboard {
     bool playing;
     double time_of_last_step;
     Robot robot;
+    Vector2i power_direction;
     Execution_Mode mode;
     int ip, multiplier;
     std::vector<Rune> sentence;
+    std::vector<Vector2i> powered_cells;
     std::array<Cell, MAX_CIRCUIT_SIZE> cells;
-    Circuit_Info original;
+    Circuit circuit;
 
-    void load(Circuit_Info circuit);
+    void load(const Circuit& circuit);
     void reload();
-    Step_Result step();
+
     bool robot_on_plate();
+    bool power_reached_socket();
+
+    Step_Result step();
+    Step_Power_Result step_power();
 };

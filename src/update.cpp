@@ -3,20 +3,20 @@
 #include "circuit.hpp"
 #include "render.hpp"
 
-void update_main_menu(Circuit_State& circuit) {
-    UNUSED(circuit);
+void update_main_menu(Motherboard& mb) {
+    UNUSED(mb);
     TODO("%s", __func__);
 }
 
-void update_level(
-    Circuit_State& circuit,
+Update_Level_Result update_level(
+    Motherboard& mb,
     Rectangle circuit_area,
     Rectangle runes_area,
     Rectangle scratchpad_area)
 {
     bool step_requested = false;
 
-    render_circuit(circuit, circuit_area);
+    render_circuit(mb, circuit_area);
 
     // Rune Table
     {
@@ -37,7 +37,7 @@ void update_level(
         int g = 0;
         for (int i = 0; i < RUNE_COUNT; i++) {
             Rune rune = (Rune)(1 << i);
-            if (!(rune & circuit.original.available_runes)) {
+            if (!(rune & mb.circuit.available_runes)) {
                 continue;
             }
 
@@ -54,8 +54,8 @@ void update_level(
             float rune_area_x = (rune_slot_area.x + rune_slot_area.width / 2.f) - rune_area_width / 2.f;
 
             if (button_pressed(rune_slot_area)) {
-                if ((int)circuit.sentence.size() < circuit.original.max_runes_allowed) {
-                    circuit.sentence.push_back(rune);
+                if ((int)mb.sentence.size() < mb.circuit.max_runes_allowed) {
+                    mb.sentence.push_back(rune);
                 }
             }
 
@@ -94,9 +94,9 @@ void update_level(
                 .height = control_bar_area.height - render_ui_margin * 2
             };
 
-            render_play_button(play_button_area, circuit.playing, button_hovered(play_button_area));
+            render_play_button(play_button_area, mb.playing, button_hovered(play_button_area));
             if (button_pressed(play_button_area)) {
-                circuit.playing = true;
+                mb.playing = true;
             }
 
             Rectangle pause_button_area = play_button_area;
@@ -104,7 +104,7 @@ void update_level(
 
             render_pause_button(pause_button_area, button_hovered(pause_button_area));
             if (button_pressed(pause_button_area)) {
-                circuit.playing = false;
+                mb.playing = false;
             }
 
             Rectangle step_button_area = pause_button_area;
@@ -112,7 +112,7 @@ void update_level(
 
             render_step_button(step_button_area, button_hovered(step_button_area));
             if (button_pressed(step_button_area)) {
-                circuit.playing = false;
+                mb.playing = false;
                 step_requested = true;
             }
 
@@ -128,7 +128,7 @@ void update_level(
         float slot_width;
         for (;;) {
             slot_width = (inner_area.height / (float)num_rows) / 3.f * 2.f;
-            if (slot_width * (circuit.original.max_runes_allowed / num_rows) <= inner_area.width) {
+            if (slot_width * (mb.circuit.max_runes_allowed / num_rows) <= inner_area.width) {
                 break;
             }
             num_rows++;
@@ -138,14 +138,14 @@ void update_level(
         int num_cols = inner_area.width / (float)slot_width;
 
         int i;
-        for (i = 0; i < (int)circuit.sentence.size(); i++) {
+        for (i = 0; i < (int)mb.sentence.size(); i++) {
             int col = i % num_cols;
             int row = i / num_cols;
             float x = inner_area.x + col * slot_width + slot_height * 0.1f;
             float y = inner_area.y + row * slot_height + slot_height * 0.1f;
-            bool current_rune = i == circuit.ip;
+            bool current_rune = i == mb.ip;
             render_rune(
-                circuit.sentence[i],
+                mb.sentence[i],
                 x,
                 y,
                 slot_width - slot_height * 0.2f,
@@ -154,7 +154,7 @@ void update_level(
             );
         }
 
-        for (; i < circuit.original.max_runes_allowed; i++) {
+        for (; i < mb.circuit.max_runes_allowed; i++) {
             int col = i % num_cols;
             int row = i / num_cols;
             float x = inner_area.x + col * slot_width + slot_height * 0.1f;
@@ -164,17 +164,39 @@ void update_level(
     }
 
     // Update circuit
-    if ((circuit.playing || step_requested) && GetTime() - circuit.time_of_last_step >= CIRCUIT_CLOCK_SPEED) {
-        circuit.time_of_last_step = GetTime();
-        Step_Result result = circuit.step();
+    if ((mb.playing || step_requested) && GetTime() - mb.time_of_last_step >= CIRCUIT_CLOCK_SPEED) {
+        mb.time_of_last_step = GetTime();
+        Step_Result result = mb.step();
         if (result != STEP_OK) {
-            circuit.playing = false;
+            mb.playing = false;
         }
     }
 
-    if (circuit.robot_on_plate()) {
+    Update_Level_Result result = UPDATE_LEVEL_OK; 
+    if (mb.robot_on_plate() && GetTime() - mb.time_of_last_step >= CIRCUIT_CLOCK_SPEED) {
+        mb.time_of_last_step = GetTime();
 
+        switch (mb.step_power()) {
+            case STEP_POWER_ERROR: {
+                result = UPDATE_LEVEL_ERROR;
+                break;
+            }
+            case STEP_POWER_PENDING: {
+                // do nothing
+                break;
+            }
+            case STEP_POWER_COMPLETE: {
+                // do nothing
+                break;
+            }
+            case STEP_POWER_COMPLETE_SOCKET_ACTIVATED: {
+                result = UPDATE_LEVEL_PASSED;
+                break;
+            }
+        }
     }
+
+    return result;
 }
 
 bool button_hovered(Rectangle button_area) {

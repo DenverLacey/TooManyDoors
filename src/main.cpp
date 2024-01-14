@@ -9,123 +9,129 @@
 #define WINDOW_WIDTH (16*80)
 #define WINDOW_HEIGHT (9*80)
 
-Circuit_Info test_circuit = {
-    .available_runes = RUNE_MOVE | RUNE_INTERACT | RUNE_FOUR,
-    .max_runes_allowed = 8,
-    .width = 5,
-    .height = 5,
-    .robot = {
-        .position = { 0, 0 },
-        .direction = { 1, 0 }
-    },
-    .power_emitter = {
-        .position = { 2, -1 },
-        .direction = { 0, 1 }
-    },
-    .cells = {
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::REFLECTOR },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::WALL },
-        Cell{ .kind = Cell::WALL },
-
-        Cell{ .kind = Cell::WALL },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::REFLECTOR, .reflector = { .flipped = true } },
-        Cell{ .kind = Cell::REFLECTOR },
-
-        Cell{ .kind = Cell::WALL },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
-
-        Cell{ .kind = Cell::WALL },
-        Cell{ .kind = Cell::REFLECTOR },
-        Cell{ .kind = Cell::BARRIER, .barrier = { .active = true } },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::REFLECTOR, .reflector = { .flipped = true } },
-
-        Cell{ .kind = Cell::WALL },
-        Cell{ .kind = Cell::WALL },
-        Cell{ .kind = Cell::SOCKET },
-        Cell{ .kind = Cell::PLATE },
-        Cell{ .kind = Cell::WALL },
-    }
+enum Game_State {
+    GAME_STATE_MENU,
+    GAME_STATE_LEVEL,
 };
 
-Circuit_Info circuit_1 = {
-    .available_runes = RUNE_MOVE | RUNE_ROTATE | RUNE_TWO | RUNE_THREE | RUNE_FOUR | RUNE_INTERACT,
-    .max_runes_allowed = 12,
-    .width = 10,
-    .height = 5,
-    .robot = {
-        .position = { -1, 0 },
-        .direction = { 1, 0 }
+#define CIRCUIT_COUNT (2)
+constexpr std::array<Circuit, CIRCUIT_COUNT> circuits = {
+    Circuit{
+        .available_runes = RUNE_MOVE | RUNE_INTERACT | RUNE_FOUR,
+        .max_runes_allowed = 8,
+        .width = 5,
+        .height = 5,
+        .robot = {
+            .position = { 0, 0 },
+            .direction = { 1, 0 }
+        },
+        .power_emitter = {
+            .position = { 2, -1 },
+            .direction = { 0, 1 }
+        },
+        .cells = {
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::REFLECTOR },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::WALL },
+            Cell{ .kind = Cell::WALL },
+
+            Cell{ .kind = Cell::WALL },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::REFLECTOR, .reflector = { .flipped = true } },
+            Cell{ .kind = Cell::REFLECTOR },
+
+            Cell{ .kind = Cell::WALL },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
+
+            Cell{ .kind = Cell::WALL },
+            Cell{ .kind = Cell::REFLECTOR },
+            Cell{ .kind = Cell::BARRIER, .barrier = { .active = true } },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::REFLECTOR, .reflector = { .flipped = true } },
+
+            Cell{ .kind = Cell::WALL },
+            Cell{ .kind = Cell::WALL },
+            Cell{ .kind = Cell::SOCKET },
+            Cell{ .kind = Cell::PLATE },
+            Cell{ .kind = Cell::WALL },
+        }
     },
-    .power_emitter = { 
-        .position = { 6, -1 },
-        .direction = { 0, 1 }
-    },
-    .cells = {
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
+    Circuit{
+        .available_runes = RUNE_MOVE | RUNE_ROTATE | RUNE_TWO | RUNE_THREE | RUNE_FOUR | RUNE_INTERACT,
+        .max_runes_allowed = 12,
+        .width = 10,
+        .height = 5,
+        .robot = {
+            .position = { -1, 0 },
+            .direction = { 1, 0 }
+        },
+        .power_emitter = { 
+            .position = { 6, -1 },
+            .direction = { 0, 1 }
+        },
+        .cells = {
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
 
-        Cell{ .kind = Cell::BARRIER, .barrier = { .active = true } },
-        Cell{ .kind = Cell::BARRIER, .barrier = { .active = true } },
-        Cell{ .kind = Cell::BARRIER, .barrier = { .active = true } },
-        Cell{ .kind = Cell::BARRIER, .barrier = { .active = true } },
-        Cell{ .kind = Cell::BARRIER, .barrier = { .active = true } },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::BARRIER, .barrier = { .active = true } },
+            Cell{ .kind = Cell::BARRIER, .barrier = { .active = true } },
+            Cell{ .kind = Cell::BARRIER, .barrier = { .active = true } },
+            Cell{ .kind = Cell::BARRIER, .barrier = { .active = true } },
+            Cell{ .kind = Cell::BARRIER, .barrier = { .active = true } },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
 
-        Cell{ .kind = Cell::WALL },
-        Cell{ .kind = Cell::WALL },
-        Cell{ .kind = Cell::WALL },
-        Cell{ .kind = Cell::WALL },
-        Cell{ .kind = Cell::BARRIER, .barrier = { .active = true } },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::WALL },
+            Cell{ .kind = Cell::WALL },
+            Cell{ .kind = Cell::WALL },
+            Cell{ .kind = Cell::WALL },
+            Cell{ .kind = Cell::BARRIER, .barrier = { .active = true } },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
 
-        Cell{ .kind = Cell::WALL },
-        Cell{ .kind = Cell::WALL },
-        Cell{ .kind = Cell::WALL },
-        Cell{ .kind = Cell::WALL },
-        Cell{ .kind = Cell::BARRIER, .barrier = { .active = true } },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::REFLECTOR, .reflector = { .flipped = true } },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::SOCKET },
+            Cell{ .kind = Cell::WALL },
+            Cell{ .kind = Cell::WALL },
+            Cell{ .kind = Cell::WALL },
+            Cell{ .kind = Cell::WALL },
+            Cell{ .kind = Cell::BARRIER, .barrier = { .active = true } },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::REFLECTOR, .reflector = { .flipped = true } },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::SOCKET },
 
-        Cell{ .kind = Cell::WALL },
-        Cell{ .kind = Cell::WALL },
-        Cell{ .kind = Cell::WALL },
-        Cell{ .kind = Cell::WALL },
-        Cell{ .kind = Cell::BARRIER, .barrier = { .active = true } },
-        Cell{ .kind = Cell::PLATE },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
-        Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::WALL },
+            Cell{ .kind = Cell::WALL },
+            Cell{ .kind = Cell::WALL },
+            Cell{ .kind = Cell::WALL },
+            Cell{ .kind = Cell::BARRIER, .barrier = { .active = true } },
+            Cell{ .kind = Cell::PLATE },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
+            Cell{ .kind = Cell::AIR },
+        }
     }
 };
-
 
 int main(int argc, const char **argv) {
     UNUSED(argc, argv);
@@ -138,9 +144,13 @@ int main(int argc, const char **argv) {
 
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Doors");
 
-    Circuit_State circuit{ .time_of_last_step = -INFINITY };
+    Game_State game_state = GAME_STATE_LEVEL;
+    int current_level = 0;
+
+    Motherboard mb{};
+
     // circuit.load(test_circuit);
-    circuit.load(circuit_1);
+    mb.load(circuits[current_level]);
 
     // // Solution circuit_1
     // circuit.sentence.push_back(RUNE_FOUR);
@@ -189,19 +199,32 @@ int main(int argc, const char **argv) {
 
     while (!WindowShouldClose()) {
         BeginDrawing();
-            if (IsKeyPressed(KEY_SPACE)) {
-                Step_Result r = circuit.step();
-                if (r == STEP_COMPLETE_PLATE_ACTIVATED) {
-                    TraceLog(LOG_INFO, "Activated plate.");
+            ClearBackground(RAYWHITE);
+            switch (game_state) {
+                case GAME_STATE_MENU: {
+                    update_main_menu(mb);
+                    break;
+                }
+                case GAME_STATE_LEVEL: {
+                    Update_Level_Result result = update_level(mb, circuit_area, rune_table_area, scratchpad_area);
+                    if (result == UPDATE_LEVEL_ERROR) {
+                        goto SHUTDOWN;
+                    } else if (result == UPDATE_LEVEL_PASSED) {
+                        current_level++;
+                        if (current_level >= (int)circuits.size()) {
+                            TraceLog(LOG_INFO, "You've Won!!!");
+                            goto SHUTDOWN;
+                        } else {
+                            mb.load(circuits[current_level]);
+                        }
+                    }
+                    break;
                 }
             }
-
-            ClearBackground(RAYWHITE);
-            update_level(circuit, circuit_area, rune_table_area, scratchpad_area);
         EndDrawing();
     }
 
+SHUTDOWN:
     CloseWindow();
-
     return 0;
 }

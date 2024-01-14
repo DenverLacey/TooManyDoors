@@ -14,24 +14,40 @@ void Robot::rotate_counter_clockwise() {
     direction.y = -x;
 }
 
-void Circuit_State::load(Circuit_Info circuit) {
-    original = circuit;
-    cells = original.cells;
+void Motherboard::load(const Circuit& circuit) {
+    this->circuit = circuit;
+    cells = circuit.cells;
     reload();
 }
 
-void Circuit_State::reload() {
-    robot = original.robot;
-    sentence = {};
-    assert(cells.size() == original.cells.size());
-    memcpy(cells.data(), original.cells.data(), (original.width * original.height) * sizeof(Cell));
+void Motherboard::reload() {
+    playing = false;
+    time_of_last_step = -INFINITY;
+    robot = circuit.robot;
+    power_direction = circuit.power_emitter.direction;
+    mode = EXE_NORMAL;
+    ip = 0;
+    multiplier = 0;
+    sentence.clear();
+    powered_cells.clear();
+    assert(cells.size() == circuit.cells.size());
+    memcpy(cells.data(), circuit.cells.data(), (circuit.width * circuit.height) * sizeof(Cell));
 }
 
-bool Circuit_State::robot_on_plate() {
-    return cells[robot.position.x + robot.position.y * original.width].kind == Cell::PLATE;
+bool Motherboard::robot_on_plate() {
+    return cells[robot.position.x + robot.position.y * circuit.width].kind == Cell::PLATE;
 }
 
-Step_Result Circuit_State::step() {
+bool Motherboard::power_reached_socket() {
+    if (powered_cells.empty()) {
+        return false;
+    }
+
+    Vector2 last_powered_cell = powered_cells.back();
+    return cells[last_powered_cell.x + last_powered_cell.y * circuit.width].kind == Cell::SOCKET;
+}
+
+Step_Result Motherboard::step() {
     if (ip >= (int)sentence.size()) {
         if (robot_on_plate()) {
             return STEP_COMPLETE_PLATE_ACTIVATED;
@@ -47,13 +63,13 @@ Step_Result Circuit_State::step() {
             case RUNE_MOVE: {
                 float nx = robot.position.x + robot.direction.x;
                 float ny = robot.position.y + robot.direction.y;
-                if (nx < 0 || nx >= original.width ||
-                    ny < 0 || ny >= original.height)
+                if (nx < 0 || nx >= circuit.width ||
+                    ny < 0 || ny >= circuit.height)
                 {
                     break;
                 }
 
-                Cell ncell = cells[nx + ny * original.width];
+                Cell ncell = cells[nx + ny * circuit.width];
                 switch (ncell.kind) {
                     case Cell::WALL: break;
                     case Cell::BARRIER: if (ncell.barrier.active) break;
@@ -81,6 +97,19 @@ Step_Result Circuit_State::step() {
                         }
                         break;
                     }
+                    case Cell::REDIRECTOR: {
+                        robot.direction = ncell.redirector.direction;
+                        break;
+                    }
+                    case Cell::PORTAL: {
+                        if (ncell.portal.active) {
+                            robot.position = {
+                                ncell.portal.link % circuit.width,
+                                ncell.portal.link / circuit.width
+                            };
+                        }
+                        break;
+                    }
                     case Cell::PLATE: {
                         return STEP_COMPLETE_PLATE_ACTIVATED;
                     }
@@ -102,13 +131,13 @@ Step_Result Circuit_State::step() {
             case RUNE_INTERACT: {
                 float nx = robot.position.x + robot.direction.x;
                 float ny = robot.position.y + robot.direction.y;
-                if (nx < 0 || nx >= original.width ||
-                    ny < 0 || ny >= original.height)
+                if (nx < 0 || nx >= circuit.width ||
+                    ny < 0 || ny >= circuit.height)
                 {
                     break;
                 }
 
-                Cell& ncell = cells[nx + ny * original.width];
+                Cell& ncell = cells[nx + ny * circuit.width];
                 switch (ncell.kind) {
                     case Cell::BARRIER: {
                         ncell.barrier.active = !ncell.barrier.active;
@@ -155,4 +184,82 @@ Step_Result Circuit_State::step() {
     }
 
     return STEP_OK;
+}
+
+Step_Power_Result Motherboard::step_power() {
+    if (power_reached_socket()) {
+        return STEP_POWER_COMPLETE_SOCKET_ACTIVATED;
+    }
+
+    if (powered_cells.empty()) {
+        powered_cells.push_back(circuit.power_emitter.position);
+        return STEP_POWER_PENDING;
+    }
+
+    Vector2i last = powered_cells.back();
+    int nx = last.x + power_direction.x;
+    int ny = last.y + power_direction.y;
+
+    Cell ncell = cells[nx + ny * circuit.width];
+    switch (ncell.kind) {
+        case Cell::WALL: {
+            return STEP_POWER_COMPLETE;
+        }
+        case Cell::BARRIER: {
+            if (ncell.barrier.active) {
+                return STEP_POWER_COMPLETE;
+            } else {
+                powered_cells.push_back({ nx, ny });
+            }
+            break;
+        }
+        case Cell::SOCKET: {
+            powered_cells.push_back({ nx, ny });
+            return STEP_POWER_COMPLETE_SOCKET_ACTIVATED;
+        }
+        case Cell::REFLECTOR: {
+            if (ncell.reflector.flipped) {
+                if (power_direction.x != 0) {
+                    float x = power_direction.x;
+                    power_direction.x = power_direction.y;
+                    power_direction.y = -x;
+                } else {
+                    float x = power_direction.x;
+                    power_direction.x = -power_direction.y;
+                    power_direction.y = x;
+                }
+            } else {
+                if (power_direction.x != 0) {
+                    float x = power_direction.x;
+                    power_direction.x = -power_direction.y;
+                    power_direction.y = x;
+                } else {
+                    float x = power_direction.x;
+                    power_direction.x = power_direction.y;
+                    power_direction.y = -x;
+                }
+            }
+
+            powered_cells.push_back({ nx, ny });
+            break;
+        }
+        case Cell::REDIRECTOR: {
+            power_direction = ncell.redirector.direction;
+            powered_cells.push_back({ nx, ny });
+            break;
+        }
+        case Cell::PORTAL: {
+            TODO("power portal cell.");
+            break;
+        }
+
+        // Not special
+        case Cell::AIR:
+        case Cell::PLATE: {
+            powered_cells.push_back({ nx, ny });
+            break;
+        }
+    }
+
+    return STEP_POWER_PENDING;
 }
