@@ -106,6 +106,21 @@ void render_circuit(const Motherboard& mb, Rectangle area) {
                     TODO("Render PORTAL cells.");
                     break;
                 }
+                case Cell::TRAP: {
+                    DrawRectangleRounded(inner_area, render_roundness, render_segments, GRAY);
+                    Vector2 center = { symbol_area.x + symbol_area.width / 2.f, symbol_area.y + symbol_area.height / 2.f };
+
+                    float left = symbol_area.x + symbol_area.width / 3.f;
+                    float right = symbol_area.x + symbol_area.width / 3.f * 2.f;
+                    float top = symbol_area.y + render_thickness;
+                    float bottom = symbol_area.y + symbol_area.height - render_thickness;
+
+                    DrawLineEx({ left, bottom }, { left, center.y }, render_thickness, render_border_color);
+                    DrawLineEx({ center.x, bottom }, { center.x, top }, render_thickness, render_border_color);
+                    DrawLineEx({ right, bottom }, { right, center.y }, render_thickness, render_border_color);
+
+                    break;   
+                }
             }
         }
     }
@@ -178,7 +193,6 @@ void render_play_button(Rectangle area, bool playing, bool highlighted) {
 }
 
 void render_pause_button(Rectangle area, bool highlighted) {
-    UNUSED(area, highlighted);
     render_button(area, highlighted);
 
     float top = area.y + area.height / 3.f;
@@ -209,6 +223,18 @@ void render_step_button(Rectangle area, bool highlighted) {
     };
 
     DrawTriangleLines(v1, v2, v3, render_border_color);
+}
+
+void render_clear_button(Rectangle area, bool highlighted) {
+    render_button(area, highlighted);
+
+    float top = area.y + area.height / 3.f;
+    float left = area.x + area.width / 3.f;
+    float bottom = area.y + area.height / 3.f * 2.f;
+    float right = area.x + area.width / 3.f * 2.f;
+
+    DrawLineEx({ left, top }, { right, bottom }, render_thickness, render_border_color);
+    DrawLineEx({ right, top }, { left, bottom }, render_thickness, render_border_color);
 }
 
 void render_rune(Rune rune, float x, float y, float width, float height, bool highlighted) {

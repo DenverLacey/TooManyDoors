@@ -6,7 +6,7 @@
 #include "utils.hpp"
 #include "runes.hpp"
 
-#define CIRCUIT_CLOCK_SPEED (0.5)
+#define CIRCUIT_CLOCK_SPEED (1.0)
 
 struct Cell_Data_Barrier {
     bool active;
@@ -35,6 +35,7 @@ struct Cell {
         REFLECTOR,     // Redirects the robot and power 90°.
         REDIRECTOR,    // Redirects the robot and power to a certain direction.
         PORTAL,        // Teleports the robot and power to another location on the circuit.
+        TRAP,          // Robot is destroyed if it touches a trap cell.
     } kind;
 
     union {
@@ -79,6 +80,7 @@ enum Execution_Mode {
 enum Step_Result {
     STEP_ERROR_INVALID_SENTENCE,
     STEP_OK,
+    STEP_FAIL,
     STEP_COMPLETE,
     STEP_COMPLETE_PLATE_ACTIVATED,
 };

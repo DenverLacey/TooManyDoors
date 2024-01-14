@@ -110,6 +110,12 @@ Step_Result Motherboard::step() {
                         }
                         break;
                     }
+                    case Cell::TRAP: {
+                        if (i == mult - 1) {
+                            return STEP_FAIL;
+                        }
+                        break;
+                    }
                     case Cell::PLATE: {
                         return STEP_COMPLETE_PLATE_ACTIVATED;
                     }
@@ -255,7 +261,9 @@ Step_Power_Result Motherboard::step_power() {
 
         // Not special
         case Cell::AIR:
-        case Cell::PLATE: {
+        case Cell::PLATE:
+        case Cell::TRAP:
+        {
             powered_cells.push_back({ nx, ny });
             break;
         }

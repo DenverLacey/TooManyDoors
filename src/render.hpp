@@ -23,6 +23,7 @@ void render_button(Rectangle button_area, bool highlighted = false);
 void render_play_button(Rectangle area, bool playing, bool highlighted);
 void render_pause_button(Rectangle area, bool highlighted);
 void render_step_button(Rectangle area, bool highlighted);
+void render_clear_button(Rectangle area, bool highlighted);
 
 void render_rune(Rune rune, float x, float y, float width, float height, bool highlighted = false);
 void render_rune(Rune rune, Rectangle rune_area, bool highlighted = false);

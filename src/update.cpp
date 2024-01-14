@@ -116,6 +116,14 @@ Update_Level_Result update_level(
                 step_requested = true;
             }
 
+            Rectangle clear_button_area = step_button_area;
+            clear_button_area.x += step_button_area.width + render_ui_margin;
+
+            render_clear_button(clear_button_area, button_hovered(clear_button_area));
+            if (button_pressed(clear_button_area)) {
+                mb.reload();
+            }
+
             DrawLineEx(
                 { control_bar_area.x, control_bar_area.y + control_bar_area.height },
                 { control_bar_area.x + control_bar_area.width, control_bar_area.y + control_bar_area.height },
@@ -169,6 +177,10 @@ Update_Level_Result update_level(
         Step_Result result = mb.step();
         if (result != STEP_OK) {
             mb.playing = false;
+        }
+
+        if (result == STEP_FAIL) {
+            return UPDATE_LEVEL_FAILED;
         }
     }
 

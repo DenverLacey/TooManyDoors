@@ -8,6 +8,7 @@ struct Motherboard;
 enum Update_Level_Result {
     UPDATE_LEVEL_ERROR,
     UPDATE_LEVEL_OK,
+    UPDATE_LEVEL_FAILED,
     UPDATE_LEVEL_PASSED
 };
 
