@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdio.h>
 #include "raylib.h"
 
@@ -137,7 +138,7 @@ int main(int argc, const char **argv) {
 
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Doors");
 
-    Circuit_State circuit{};
+    Circuit_State circuit{ .time_of_last_step = -INFINITY };
     // circuit.load(test_circuit);
     circuit.load(circuit_1);
 
@@ -189,8 +190,8 @@ int main(int argc, const char **argv) {
     while (!WindowShouldClose()) {
         BeginDrawing();
             if (IsKeyPressed(KEY_SPACE)) {
-                Tick_Result r = circuit.tick();
-                if (r == TICK_COMPLETE_PLATE_ACTIVATED) {
+                Step_Result r = circuit.step();
+                if (r == STEP_COMPLETE_PLATE_ACTIVATED) {
                     TraceLog(LOG_INFO, "Activated plate.");
                 }
             }

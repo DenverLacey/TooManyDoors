@@ -27,9 +27,17 @@ void Circuit_State::reload() {
     memcpy(cells.data(), original.cells.data(), (original.width * original.height) * sizeof(Cell));
 }
 
-Tick_Result Circuit_State::tick() {
+bool Circuit_State::robot_on_plate() {
+    return cells[robot.position.x + robot.position.y * original.width].kind == Cell::PLATE;
+}
+
+Step_Result Circuit_State::step() {
     if (ip >= (int)sentence.size()) {
-        return TICK_COMPLETE;
+        if (robot_on_plate()) {
+            return STEP_COMPLETE_PLATE_ACTIVATED;
+        } else {
+            return STEP_COMPLETE;
+        }
     }
 
     int new_multiplier = 0;
@@ -74,7 +82,7 @@ Tick_Result Circuit_State::tick() {
                         break;
                     }
                     case Cell::PLATE: {
-                        return TICK_COMPLETE_PLATE_ACTIVATED;
+                        return STEP_COMPLETE_PLATE_ACTIVATED;
                     }
                     default:
                         break;
@@ -83,7 +91,7 @@ Tick_Result Circuit_State::tick() {
             }
             case RUNE_CHANGE_DIRECTION: {
                 if (multiplier == 0) {
-                    return TICK_ERROR_INVALID_SENTENCE;
+                    return STEP_ERROR_INVALID_SENTENCE;
                 }
                 break;
             }
@@ -146,5 +154,5 @@ Tick_Result Circuit_State::tick() {
         ip++;
     }
 
-    return TICK_OK;
+    return STEP_OK;
 }

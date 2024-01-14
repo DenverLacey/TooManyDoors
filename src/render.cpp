@@ -4,7 +4,7 @@
 #include "raymath.h"
 
 void render_circuit(const Circuit_State& circuit, Rectangle area) {
-    DrawRectangleRec(area, ColorAlphaBlend(BLACK, GRAY, LIGHTGRAY));
+    render_bordered_pane(area);
     
     float cell_width = area.width / ((float)circuit.original.width + 2.f);
     float cell_height = area.height / ((float)circuit.original.height + 2.f);
@@ -123,91 +123,76 @@ void render_circuit(const Circuit_State& circuit, Rectangle area) {
     Vector2 arrow_end = Vector2Add(arrow_start, Vector2Scale(circuit.robot.direction, cell_height / 2.f - 10.f));
     DrawLineEx(arrow_start, arrow_end, 1.f, MAGENTA);
 #endif
-
-    DrawRectangleLinesEx(area, render_thickness, DARKGRAY);
 }
 
-// void render_rune_table(Rune_Set available_runes, Rectangle area) {
-//     DrawRectangleRec(area, ColorAlphaBlend(BLACK, GRAY, LIGHTGRAY));
-//     DrawRectangleLinesEx(area, render_thickness, DARKGRAY);
-
-//     Rectangle inner_area = {
-//         .x = area.x + render_ui_margin * 2,
-//         .y = area.y + render_ui_margin,
-//         .width = area.width - render_ui_margin * 4,
-//         .height = area.height - render_ui_margin * 2
-//     };
-
-//     int num_rows = 4;
-//     int num_cols = 4;
-//     float rune_slot_width = inner_area.width / (float)num_cols;
-//     float rune_slot_height = inner_area.height / (float)num_rows;
-
-//     int g = 0;
-//     for (int i = 0; i < RUNE_COUNT; i++) {
-//         Rune rune = (Rune)(1 << i);
-//         if (!(rune & available_runes)) {
-//             continue;
-//         }
-
-//         Rectangle rune_slot_area = {
-//             .x = inner_area.x + rune_slot_width * (float)(g % num_cols),
-//             .y = inner_area.y + rune_slot_height * (float)(g / num_rows),
-//             .width = rune_slot_width,
-//             .height = rune_slot_height
-//         };
-
-//         float rune_area_y = rune_slot_area.y + rune_slot_area.height * 0.1f;
-//         float rune_area_height = rune_slot_area.height * 0.8f;
-//         float rune_area_width = rune_area_height / 3.f * 2.f;
-//         float rune_area_x = (rune_slot_area.x + rune_slot_area.width / 2.f) - rune_area_width / 2.f;
-
-//         Render_Rune_Func render_func = RENDER_RUNE_FUNCS[i];
-//         render_func(rune_area_x, rune_area_y, rune_area_width, rune_area_height);
-//         g++;
-//     }
-// }
-
-void render_rune_background(float x, float y, float width, float height, bool highlighted) {
-    Rectangle rec = { x, y, width, height };
-    DrawRectangleRounded(rec, 0.25f, 16, GRAY);
-    DrawRectangleRoundedLines(rec, 0.25f, 16, 3.f, highlighted ? WHITE : DARKGRAY);
+void render_bordered_pane(Rectangle area) {
+    DrawRectangleRec(area, render_bg_color);
+    DrawRectangleLinesEx(area, render_thickness, render_border_color);
 }
 
-// void render_scratchpad(int max_runes_allowed, Const_Span<Rune> sentence, Rectangle area) {
-//     DrawRectangleRec(area, ColorAlphaBlend(BLACK, GRAY, LIGHTGRAY));
-//     DrawRectangleLinesEx(area, render_thickness, DARKGRAY);
+void render_button(float x, float y, float width, float height, bool highlighted) {
+    render_button({ x, y, width, height }, highlighted);
+}
 
-//     int num_rows = 1;
-//     float slot_width;
-//     for (;;) {
-//         slot_width = (area.height / (float)num_rows) / 3.f * 2.f;
-//         if (slot_width * (max_runes_allowed / num_rows) <= area.width) {
-//             break;
-//         }
-//         num_rows++;
-//     }
+void render_button(Rectangle button_area, bool highlighted) {
+    DrawRectangleRounded(button_area, render_roundness, render_segments, render_fg_color);
+    DrawRectangleRoundedLines(button_area, render_roundness, render_segments, render_thickness, highlighted ? render_highlight_color : render_border_color);
+}
 
-//     float slot_height = area.height / (float)num_rows;
-//     int num_cols = area.width / (float)slot_width;
+void render_play_button(Rectangle area, bool playing, bool highlighted) {
+    render_button(area, highlighted);
 
-//     int i;
-//     for (i = 0; i < (int)sentence.length; i++) {
-//         int col = i % num_cols;
-//         int row = i / num_cols;
-//         float x = area.x + col * slot_width + slot_height * 0.1f;
-//         float y = area.y + row * slot_height + slot_height * 0.1f;
-//         render_rune(sentence[i], x, y, slot_width - slot_height * 0.2f, slot_height - slot_height * 0.2f);
-//     }
+    Vector2 v1 = {
+        .x = area.x + area.width / 3.f,
+        .y = area.y + area.height / 3.f
+    };
 
-//     for (; i < max_runes_allowed; i++) {
-//         int col = i % num_cols;
-//         int row = i / num_cols;
-//         float x = area.x + col * slot_width + slot_height * 0.1f;
-//         float y = area.y + row * slot_height + slot_height * 0.1f;
-//         render_rune_background(x, y, slot_width - slot_height * 0.2f, slot_height - slot_height * 0.2f);
-//     }
-// }
+    Vector2 v2 = {
+        .x = area.x + area.width / 3.f,
+        .y = area.y + area.height / 3.f * 2.f
+    };
+
+    Vector2 v3 = {
+        .x = area.x + area.width / 3.f * 2.f,
+        .y = area.y + area.height / 2.f
+    };
+
+    DrawTriangle(v1, v2, v3, playing ? render_highlight_color : render_border_color);
+}
+
+void render_pause_button(Rectangle area, bool highlighted) {
+    UNUSED(area, highlighted);
+    render_button(area, highlighted);
+
+    float top = area.y + area.height / 3.f;
+    float left = area.x + area.width / 3.f;
+    float bottom = area.y + area.height / 3.f * 2.f;
+    float right = area.x + area.width / 3.f * 2.f;
+
+    DrawLineEx({ left, top }, { left, bottom }, render_thickness, render_border_color);
+    DrawLineEx({ right, top }, { right, bottom }, render_thickness, render_border_color);
+}
+
+void render_step_button(Rectangle area, bool highlighted) {
+    render_button(area, highlighted);
+
+    Vector2 v1 = {
+        .x = area.x + area.width / 3.f,
+        .y = area.y + area.height / 3.f
+    };
+
+    Vector2 v2 = {
+        .x = area.x + area.width / 3.f,
+        .y = area.y + area.height / 3.f * 2.f
+    };
+
+    Vector2 v3 = {
+        .x = area.x + area.width / 3.f * 2.f,
+        .y = area.y + area.height / 2.f
+    };
+
+    DrawTriangleLines(v1, v2, v3, render_border_color);
+}
 
 void render_rune(Rune rune, float x, float y, float width, float height, bool highlighted) {
     for (int i = 0; i < RUNE_COUNT; i++) {
@@ -218,6 +203,10 @@ void render_rune(Rune rune, float x, float y, float width, float height, bool hi
     }
 }
 
+void render_rune(Rune rune, Rectangle rune_area, bool highlighted) {
+    render_rune(rune, rune_area.x, rune_area.y, rune_area.width, rune_area.height, highlighted);
+}
+
 static void render_rune_move(float x, float y, float width, float height, bool highlighted) {
     float line_length = width / 2.f - (width * 0.1f);
     Vector2 center = { x + width / 2.f, y + height / 2.f };
@@ -226,11 +215,11 @@ static void render_rune_move(float x, float y, float width, float height, bool h
     Vector2 bottom = { center.x, center.y + line_length };
     Vector2 left = { center.x - line_length, center.y };
 
-    render_rune_background(x, y, width, height, highlighted);
-    DrawLineEx(top, right, render_thickness, DARKGRAY);
-    DrawLineEx(right, bottom, render_thickness, DARKGRAY);
-    DrawLineEx(bottom, left, render_thickness, DARKGRAY);
-    DrawLineEx(left, top, render_thickness, DARKGRAY);
+    render_button(x, y, width, height, highlighted);
+    DrawLineEx(top, right, render_thickness, render_border_color);
+    DrawLineEx(right, bottom, render_thickness, render_border_color);
+    DrawLineEx(bottom, left, render_thickness, render_border_color);
+    DrawLineEx(left, top, render_thickness, render_border_color);
 }
 
 static void render_rune_change_direction(float x, float y, float width, float height, bool highlighted) {
@@ -244,14 +233,14 @@ static void render_rune_rotate(float x, float y, float width, float height, bool
     Vector2 top = { center.x, center.y - height / 2.f };
     Vector2 bottom = { center.x, center.y + height / 2.f };
 
-    render_rune_background(x, y, width, height, highlighted);
-    DrawCircleV(center, radius, DARKGRAY);
-    DrawCircleV(center, radius - render_thickness, GRAY);
-    DrawLineEx(top, bottom, render_thickness * 4.f, GRAY);
+    render_button(x, y, width, height, highlighted);
+    DrawCircleV(center, radius, render_border_color);
+    DrawCircleV(center, radius - render_thickness, render_fg_color);
+    DrawLineEx(top, bottom, render_thickness * 4.f, render_fg_color);
 }
 
 static void render_rune_interact(float x, float y, float width, float height, bool highlighted) {
-    render_rune_background(x, y, width, height, highlighted);
+    render_button(x, y, width, height, highlighted);
 
     Vector2 center = { x + width / 2.f, y + height / 2.f };
     float line_length = width / 3.5f - (width * 0.1f);
@@ -260,11 +249,11 @@ static void render_rune_interact(float x, float y, float width, float height, bo
     float top = center.y - height / 4.f;
     float bottom = center.y + height / 4.f;
 
-    DrawCircle(left, center.y, line_length, DARKGRAY);
-    DrawCircle(right, center.y, line_length, DARKGRAY);
-    DrawCircle(left, center.y, line_length - render_thickness, GRAY);
-    DrawCircle(right, center.y, line_length - render_thickness, GRAY);
-    DrawLineEx({ center.x, top }, { center.x, bottom }, render_thickness, DARKGRAY);
+    DrawCircle(left, center.y, line_length, render_border_color);
+    DrawCircle(right, center.y, line_length, render_border_color);
+    DrawCircle(left, center.y, line_length - render_thickness, render_fg_color);
+    DrawCircle(right, center.y, line_length - render_thickness, render_fg_color);
+    DrawLineEx({ center.x, top }, { center.x, bottom }, render_thickness, render_border_color);
 }
 
 static void render_rune_repeat(float x, float y, float width, float height, bool highlighted) {
@@ -286,10 +275,10 @@ static void render_rune_flow_end(float x, float y, float width, float height, bo
 
     float line_length = width / 2.f - (width * 0.1f);
 
-    render_rune_background(x, y, width, height, highlighted);
-    DrawLineEx({ left, center - line_length }, { left, center + line_length }, render_thickness, DARKGRAY);
-    DrawCircle(right, top, render_thickness, DARKGRAY);
-    DrawCircle(right, bottom, render_thickness, DARKGRAY);
+    render_button(x, y, width, height, highlighted);
+    DrawLineEx({ left, center - line_length }, { left, center + line_length }, render_thickness, render_border_color);
+    DrawCircle(right, top, render_thickness, render_border_color);
+    DrawCircle(right, bottom, render_thickness, render_border_color);
 }
 
 static void render_rune_two(float x, float y, float width, float height, bool highlighted) {
@@ -300,9 +289,9 @@ static void render_rune_two(float x, float y, float width, float height, bool hi
     float right = center + line_length;
     float left = center - line_length;
 
-    render_rune_background(x, y, width, height, highlighted);
-    DrawLineEx({ left, top }, { right, top }, render_thickness, DARKGRAY);
-    DrawLineEx({ left, bottom }, { right, bottom }, render_thickness, DARKGRAY);
+    render_button(x, y, width, height, highlighted);
+    DrawLineEx({ left, top }, { right, top }, render_thickness, render_border_color);
+    DrawLineEx({ left, bottom }, { right, bottom }, render_thickness, render_border_color);
 }
 
 static void render_rune_three(float x, float y, float width, float height, bool highlighted) {
@@ -314,10 +303,10 @@ static void render_rune_three(float x, float y, float width, float height, bool 
     float right = center.x + line_length;
     float left = center.x - line_length;
 
-    render_rune_background(x, y, width, height, highlighted);
-    DrawLineEx({ left, center.y }, { right, center.y }, render_thickness, DARKGRAY);
-    DrawLineEx({ left, top }, { right, top }, render_thickness, DARKGRAY);
-    DrawLineEx({ left, bottom }, { right, bottom }, render_thickness, DARKGRAY);
+    render_button(x, y, width, height, highlighted);
+    DrawLineEx({ left, center.y }, { right, center.y }, render_thickness, render_border_color);
+    DrawLineEx({ left, top }, { right, top }, render_thickness, render_border_color);
+    DrawLineEx({ left, bottom }, { right, bottom }, render_thickness, render_border_color);
 }
 
 static void render_rune_four(float x, float y, float width, float height, bool highlighted) {
@@ -329,12 +318,12 @@ static void render_rune_four(float x, float y, float width, float height, bool h
     float right = center.x + line_length;
     float left = center.x - line_length;
 
-    render_rune_background(x, y, width, height, highlighted);
-    DrawLineEx({ left, center.y }, { right, center.y }, render_thickness, DARKGRAY);
-    DrawLineEx({ left, top }, { right, top }, render_thickness, DARKGRAY);
-    DrawLineEx({ left, bottom }, { right, bottom }, render_thickness, DARKGRAY);
+    render_button(x, y, width, height, highlighted);
+    DrawLineEx({ left, center.y }, { right, center.y }, render_thickness, render_border_color);
+    DrawLineEx({ left, top }, { right, top }, render_thickness, render_border_color);
+    DrawLineEx({ left, bottom }, { right, bottom }, render_thickness, render_border_color);
 
-    DrawLineEx({ center.x + line_length / 3.f, y + (width * 0.1f) }, { center.x - line_length / 3.f, y + height - width * 0.1f }, render_thickness, DARKGRAY);
+    DrawLineEx({ center.x + line_length / 3.f, y + (width * 0.1f) }, { center.x - line_length / 3.f, y + height - width * 0.1f }, render_thickness, render_border_color);
 }
 
 static_assert(RUNE_COUNT == 10);

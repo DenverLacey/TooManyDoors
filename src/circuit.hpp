@@ -6,6 +6,8 @@
 #include "utils.hpp"
 #include "runes.hpp"
 
+#define CIRCUIT_CLOCK_SPEED (0.5)
+
 struct Cell_Data_Barrier {
     bool active;
 };
@@ -74,14 +76,16 @@ enum Execution_Mode {
     EXE_REVERSE,
 };
 
-enum Tick_Result {
-    TICK_ERROR_INVALID_SENTENCE,
-    TICK_OK,
-    TICK_COMPLETE,
-    TICK_COMPLETE_PLATE_ACTIVATED,
+enum Step_Result {
+    STEP_ERROR_INVALID_SENTENCE,
+    STEP_OK,
+    STEP_COMPLETE,
+    STEP_COMPLETE_PLATE_ACTIVATED,
 };
 
 struct Circuit_State {
+    bool playing;
+    double time_of_last_step;
     Robot robot;
     Execution_Mode mode;
     int ip, multiplier;
@@ -91,5 +95,6 @@ struct Circuit_State {
 
     void load(Circuit_Info circuit);
     void reload();
-    Tick_Result tick();
+    Step_Result step();
+    bool robot_on_plate();
 };
