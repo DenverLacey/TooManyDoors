@@ -8,3 +8,6 @@ obj
 # Make files
 *.make
 Makefile
+
+# Godot 4+ specific ignores
+.godot/
