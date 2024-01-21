@@ -25,9 +25,9 @@
 struct Vector2i {
     int x, y;
 
-    operator Vector2() const noexcept {
-        return { (float)x, (float)y };
-    }
+    Vector2i rotate_clockwise() const;
+    Vector2i rotate_counter_clockwise() const;
+    operator Vector2() const noexcept;
 };
 
 template<typename T>

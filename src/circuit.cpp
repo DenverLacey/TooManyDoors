@@ -2,18 +2,6 @@
 
 #include "raymath.h"
 
-void Robot::rotate_clockwise() {
-    float x = direction.x;
-    direction.x = -direction.y;
-    direction.y = x;
-}
-
-void Robot::rotate_counter_clockwise() {
-    float x = direction.x;
-    direction.x = direction.y;
-    direction.y = -x;
-}
-
 void Motherboard::load(const Circuit& circuit) {
     this->circuit = circuit;
     cells = circuit.cells;
@@ -84,15 +72,15 @@ Step_Result Motherboard::step() {
                     case Cell::REFLECTOR: {
                         if (ncell.reflector.flipped) {
                             if (robot.direction.x != 0) {
-                                robot.rotate_counter_clockwise();
+                                robot.direction = robot.direction.rotate_counter_clockwise();
                             } else {
-                                robot.rotate_clockwise();
+                                robot.direction = robot.direction.rotate_clockwise();
                             }
                         } else {
                             if (robot.direction.x != 0) {
-                                robot.rotate_clockwise();
+                                robot.direction = robot.direction.rotate_clockwise();
                             } else {
-                                robot.rotate_counter_clockwise();
+                                robot.direction = robot.direction.rotate_counter_clockwise();
                             }
                         }
                         break;
@@ -131,7 +119,7 @@ Step_Result Motherboard::step() {
                 break;
             }
             case RUNE_ROTATE: {
-                robot.rotate_clockwise();
+                robot.direction = robot.direction.rotate_clockwise();
                 break;
             }
             case RUNE_INTERACT: {
@@ -226,23 +214,15 @@ Step_Power_Result Motherboard::step_power() {
         case Cell::REFLECTOR: {
             if (ncell.reflector.flipped) {
                 if (power_direction.x != 0) {
-                    float x = power_direction.x;
-                    power_direction.x = power_direction.y;
-                    power_direction.y = -x;
+                    power_direction = power_direction.rotate_counter_clockwise();
                 } else {
-                    float x = power_direction.x;
-                    power_direction.x = -power_direction.y;
-                    power_direction.y = x;
+                    power_direction = power_direction.rotate_clockwise();
                 }
             } else {
                 if (power_direction.x != 0) {
-                    float x = power_direction.x;
-                    power_direction.x = -power_direction.y;
-                    power_direction.y = x;
+                    power_direction = power_direction.rotate_clockwise();
                 } else {
-                    float x = power_direction.x;
-                    power_direction.x = power_direction.y;
-                    power_direction.y = -x;
+                    power_direction = power_direction.rotate_counter_clockwise();
                 }
             }
 

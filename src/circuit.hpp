@@ -48,9 +48,6 @@ struct Cell {
 
 struct Robot {
     Vector2i position, direction;
-
-    void rotate_clockwise();
-    void rotate_counter_clockwise();
 };
 
 struct Power_Emitter {
